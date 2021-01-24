@@ -26,6 +26,11 @@ unsigned int frameCount = 0;
 unsigned int prevFrameCount = 0;
 unsigned int secondsPast = 0;
 
+int color_white[] = {0xfb, 0xf7, 0xf3};
+int color_beige[] = {0xe5, 0xb0, 0x83};
+int color_green[] = {0x42, 0x6e, 0x5d};
+int color_black[] = {0x20, 0x28, 0x3d};
+
 int setup() {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s",
@@ -67,17 +72,16 @@ int quit() {
   TTF_Quit();
 }
 
-int writeText(char *text) {
+int writeText(char *text, int x, int y) {
   SDL_Color fontColor = {255, 255, 255, 255};
   SDL_Surface *textSurface = TTF_RenderText_Solid(font, text, fontColor);
   SDL_Texture *textTexture =
       SDL_CreateTextureFromSurface(renderer, textSurface);
-  SDL_Rect textRect = {0, 0, 0, 0};
+  SDL_Rect textRect = {x, y - 4, 0, 0};
   SDL_QueryTexture(textTexture, NULL, NULL, &textRect.w, &textRect.h);
   SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
 
   SDL_SetRenderDrawColor(renderer, 255, 0, 0, 0);
-  SDL_RenderDrawRect(renderer, &textRect);
 
   SDL_DestroyTexture(textTexture);
   SDL_FreeSurface(textSurface);
@@ -100,10 +104,13 @@ int main() {
     character.rect.y = HEIGHT / 2 + sin(SDL_GetTicks() * .001) * 20;
 
     /* draw */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_SetRenderDrawColor(renderer, color_black[0], color_black[1],
+                           color_black[2], 0);
     SDL_RenderClear(renderer);
 
-    writeText("Hello world!");
+    char fps_string[10]; /* 10 is enough for 5 digit fps */
+    sprintf(fps_string, "FPS: %d", prevFrameCount);
+    writeText(fps_string, 2, 2);
 
     SDL_RenderCopy(renderer, character.sprite, NULL, &character.rect);
     SDL_RenderPresent(renderer);
@@ -112,6 +119,7 @@ int main() {
     if (SDL_GetTicks() / 1000 > secondsPast) {
       secondsPast = SDL_GetTicks() / 1000;
       printf("FPS: %d\n", frameCount);
+      prevFrameCount = frameCount;
       frameCount = 0;
     }
   }
